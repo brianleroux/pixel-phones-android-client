@@ -1,35 +1,965 @@
+<!DOCTYPE html>
+<meta name="viewport" content="initial-scale=1.0; maximum-scale=1.0; minimum-scale=1.0; user-scalable=0;" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
 <html>
 <head>
-<meta name="viewport" content="width=320; user-scalable=no" />
-<meta http-equiv="Content-type" content="text/html; charset=utf-8">
-<title>PhoneGap</title>
+
+<meta charset=utf-8 />
+
+<style type="text/css">
+body{
+	font-family:Arial, Helvetica, sans-serif;
+	overflow: hidden;
+	background-color:black;
+	}
+	
+	canvas { 
+		display:block;
+		position:absolute;
+		border : 1px white solid;
+		z-index : -1;
+		pointer-events:none;
+	
+	}
+.button, .info {
+  width:65%;
+  /*height:90px;*/
+  margin: 1em auto;
+  background-color:rgba(198,198,198,0.3);
+  -webkit-border-radius: 20px;
+  border-radius: 20px;
+ 
+  
+}
+.button:hover, .button:active {
+  background-color:#ae3749;
+}
+
+.button a, .info p {
+  display:block;
+  width:100%;
+  height:100%;
+  padding:0.5em 0;
+  color: rgba(255,255,255,0.4);
+  text-decoration:none;
+  text-align: center;
+  font-family:helvetica;
+  font-size:1.5em;
+  
+  /*remove the grey highlight bit on mobile safari */
+  -webkit-tap-highlight-color: rgba(78,126,226,.2);
+   /* -webkit-touch-callout: none;*/
+  
+ }
+.info {
+	
+	border-radius: 2px;
+
+    background-color:white;
+}
+ .info p {
+	 color: black;
+ }
+.geo {
+	 color: #444;
+}
+</style>
+<title>PixelPhones</title>
+
 </head>
 <body>
-<h1>Welcome to Cordova!</h1>
-<script src=cordova-2.0.0.js></script>
-<script src=powermanagement.js></script>
-<script>
-    function go() {
-        
-        console.log('init the geo')
+	
+	<script type="text/javascript">
+ 
+ 	var canvas, c, 
+		SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT=window.innerHeight, 
+		ID = -1, css3d = 
+		//false, 
+		supports3D(), 
+		debugMode = false,
+		speed = 1; 
+		//fastMode = true;
+		
+	var startTime = -1,
+		touchesDisabled = false, 
+		currentImage = 0; 
 
-        function win (p) {
-            console.log('cur pos: ' + p.coords.latitude + " " + p.coords.longitude)
+	var 
+	STATE_WAITING = 0, 
+	STATE_HOLD_MSG = 1, 
+	STATE_FLASHING_INTRO = 2, 
+	STATE_LOCATION_COLOUR = 3, 
+	STATE_FLASHING_OUTRO = 4, 
+	STATE_OVER = 5,
+	STATE_CANCELLED = -1, 
+	
+	WAIT_TIME = 10, 
+	FLASH_IN_TIME = 50, 
+	IMAGE_TIME = 60, 
+	TRANSITION_TIME = 10, 
+	FLASH_OUT_TIME = 50, 
+	IMAGE_COUNT = 2, 
+	
+	flashOn = false,
+	nextFlash = 0, 
+	lastClick = 0, 
+	state = STATE_WAITING, 
+	lastLocationData, 
+	locationWatchId = -1; 
+	
+	var startButton, cancelButton, backButton, debugButton, infoDiv, geoDiv; 
+	
+	var broadcaster = new Broadcaster(); 
+
+	 var clickSound = new Audio("ClickSound.wav"); 
+	 clickSound.load();
+	// hack to stop autolock
+	 var silentSound = new Audio("silence.mp3"); 
+	 silentSound.load();
+	
+	var //nycImageO,
+		//nycImageEarth,
+		//norfolkSquareImage, 
+		//clickSound, 
+		mapData; 
+	
+	var currentColour = {r: 0, g:0, b:0 };
+	
+	window.addEventListener("load", init); 
+	window.addEventListener("beforeunload", onUnload); 
+	window.addEventListener("orientationchange", updateSize); 
+	
+	document.body.addEventListener("touchstart", function(e){ clickSound.volume = 0; clickSound.play; if(touchesDisabled) e.preventDefault();});
+
+	function init(){
+
+		canvas = document.getElementById('myCanvas'); 
+		c = canvas.getContext('2d'); 
+		
+		setTransform("scale("+(SCREEN_WIDTH)+","+(SCREEN_HEIGHT)+") ");
+		
+		mapData = [
+		{
+			images : [document.getElementById("nycImageO"), document.getElementById("nycImageEarth")], 
+			latMin : 40.782926, 
+			latMax : 40.779733,
+			longMin : -73.968468, 
+			longMax : -73.964938
+		}/*,
+		{
+			// norfolk square test... 
+			images : [document.getElementById("nycImageO"), document.getElementById("nycImageEarth")], 
+			latMin : 50.825228, 
+			latMax : 50.824491, 
+			longMin : -0.155291, 
+			longMax : -0.154208
+		},
+		{
+			// skiff test... 
+			images : [document.getElementById("nycImageO"), document.getElementById("nycImageEarth")], 
+			latMin : 50.8269300, 
+			latMax : 50.8269900, 
+			longMin : -0.1368000, 
+			longMax : -0.1369500
+		}*/
+
+		];		
+		
+		
+		//clickSound = document.getElementById("clickSound");
+		
+		startButton = document.getElementById("startButton");
+		backButton = document.getElementById("backButton");
+		cancelButton = document.getElementById("cancelButton");
+			
+		infoDiv= document.getElementById("infoDiv");
+		geoDiv = document.getElementById("geoDiv"); 
+		
+	
+		hide(infoDiv);
+		show(startButton);
+		hide(geoDiv);
+		
+		setInterval(loop, 16); 
+		
+		
+		for(var i = 0; i<mapData.length;i++) { 
+			var data = mapData[i]; 
+			
+			data.canvases = []; 
+			data.contexts = []; 
+			
+			for(var j=0; j<data.images.length; j++) {
+				
+				var dcanv = document.createElement('canvas');
+				dcanv.width = data.images[j].width; 
+				dcanv.height = data.images[j].height; 
+				var dctx = dcanv.getContext('2d');
+				dctx.drawImage(data.images[j], 0,0); 
+				data.canvases.push(dcanv); 
+				data.contexts.push(dctx);
+			}
+			
+			data.numImages = data.images.length; 
+			 
+	
+		}
+	
+		startGeolocating(); 
+		
+	}
+
+	function updateSize(e) { 
+		SCREEN_WIDTH = window.innerWidth; 
+		SCREEN_HEIGHT = window.innerHeight; 
+		window.scrollTo(0,1); 
+			setTransform("scale("+(SCREEN_WIDTH)+","+(SCREEN_HEIGHT)+") ");
+	
+	
+	}
+	
+	function startGeolocating() { 
+	
+		
+		//navigator.geolocation.watchPosition(updatePosition, error,  {enableHighAccuracy: true, max});
+		//if (window==window.top)
+		//	navigator.geolocation.watchPosition(updatePosition, error,  {enableHighAccuracy: true, max});
+		//else 
+		if(locationWatchId == -1)
+			locationWatchId = window.navigator.geolocation.watchPosition(updatePosition, error,  {enableHighAccuracy: true, maximumAge: 1000});
+		
+	}
+	function stopGeolocating() { 
+	
+		if(locationWatchId!=-1) {
+			window.navigator.geolocation.clearWatch(locationWatchId);
+			locationWatchId = -1; 
+			
+			
+		}
+	
+	}
+
+	
+	function loop() {
+		
+		if(state==STATE_WAITING) return; 
+		
+		
+		var flashStartTime = WAIT_TIME; 
+		var locationColourTime = flashStartTime + FLASH_IN_TIME;
+		var flashOutStartTime = locationColourTime +  (IMAGE_TIME*IMAGE_COUNT) +(TRANSITION_TIME*(IMAGE_COUNT-1));
+		var endTime = flashOutStartTime + FLASH_OUT_TIME; 
+		
+		var elapsedTime = (new Date().getTime()-startTime)/1000; 
+		elapsedTime*=speed; 
+		
+		if((state == STATE_HOLD_MSG) && (elapsedTime>flashStartTime))
+			changeState(STATE_FLASHING_INTRO);
+		else if((state == STATE_FLASHING_INTRO) && (elapsedTime>locationColourTime))
+			changeState(STATE_LOCATION_COLOUR);
+		else if((state == STATE_LOCATION_COLOUR) && (elapsedTime>flashOutStartTime  ))
+			changeState(STATE_FLASHING_OUTRO);
+		else if((state == STATE_FLASHING_OUTRO) && (elapsedTime>endTime))
+			changeState(STATE_OVER);
+			
+			
+		if((state==STATE_FLASHING_INTRO) || (state ==STATE_FLASHING_OUTRO)) {
+			broadcaster.updateBroadcastColour(); 
+			/*if(elapsedTime>nextFlash) { 
+				
+				if(!flashOn) { 
+					changeColour("white");
+					if(state==STATE_FLASHING_OUTRO) { 
+					 
+						playClick(); 
+					
+					}
+					flashOn = true; 
+			
+			
+				} else { 
+					if(flashOn) { 
+						changeColour("black");
+						flashOn = false;
+				
+					}
+			
+				}
+			
+				nextFlash = (Math.random()*0.3)+0.1;
+				nextFlash*=speed; 
+				nextFlash+=elapsedTime;
+			
+			}*/
+			
+		} else if(state == STATE_LOCATION_COLOUR) {
+			var progress = elapsedTime - locationColourTime; 
+			
+			if(progress-lastClick>1) { 
+				playSilence(); 
+				lastClick = progress;
+			}
+			
+			if(progress<IMAGE_TIME) {	
+				if(currentImage != 0) {
+					drawPosition(lastLocationData); 
+					log("changing to image 0");
+					currentImage = 0;
+				} 
+			} else if((progress > IMAGE_TIME) && (progress<IMAGE_TIME + TRANSITION_TIME)) {
+				var unitTransition = map(progress,IMAGE_TIME, IMAGE_TIME+TRANSITION_TIME, 0,1 );
+				// transitioning
+				log(unitTransition); 
+			} else if(progress>IMAGE_TIME + TRANSITION_TIME) {
+				if(currentImage == 0) {
+					currentImage= 1; 
+					drawPosition(lastLocationData); 
+					log("changing to image 1");
+				}
+			}
+			
+			
+			if(flashOn) { 
+			
+				updateColour(); 
+				flashOn =false; 
+			
+			
+			}
+			
+			if(Math.random()<0.01) {
+
+				if((currentColour.r<5) && (currentColour.g<5) && (currentColour.b <70 )) { 
+				
+					if(Math.random()<0.01){ 
+						changeColour("white");
+						flashOn = true; 
+					}
+				} else {
+					if(Math.random()<0.2){ 
+					
+						brightness = map(Math.random(),0,1,0.8,1); 
+						flashOn = true; 
+		
+						var col = "rgb(" + Math.round(currentColour.r*brightness)+"," + 
+								  Math.round(currentColour.g*brightness)+"," +
+							   	  Math.round(currentColour.b*brightness)+")"; 
+							
+						changeColour(col); 
+						log("changing colour ", col, currentColour);
+					}
+				}
+			}
+			
+		}
+		
+		
+	}
+	
+	
+	function playClick() { 
+		try { 
+			clickSound.play(); 
+		} finally {};		
+	
+	
+	}
+	function playSilence() { 
+		try { 
+			silentSound.play(); 
+		} finally {};		
+	
+	
+	}
+	function changeState(newstate) { 
+	
+		if(state == newstate) return; 
+		
+		if(state ==STATE_FLASHING_OUTRO) {
+			changeColour("black");
+			
+		}
+		hide(infoDiv);
+		
+		switch (newstate) { 
+		
+			case STATE_HOLD_MSG :
+			//msgdiv.innerHTML += "<b>Hold phone up now!</b>";
+			infoDiv.innerHTML = "<p>Hold your phone up now!</p>";
+			hide(startButton); 
+			show(cancelButton); 
+			hide(backButton); 
+			show(infoDiv);
+			
+			break; 
+		
+			case STATE_LOCATION_COLOUR : 
+			hide(startButton); 
+			show(cancelButton); 
+			hide(backButton); 
+		
+			drawPosition(lastLocationData);
+			updateColour(); 
+			
+			break; 
+			
+			case STATE_CANCELLED : 
+			case STATE_OVER :
+			changeColour("black");
+
+			show(startButton); 
+			hide(cancelButton); 
+			show(backButton); 
+			
+			break; 
+	
+			case STATE_FLASHING_INTRO : 
+			case STATE_FLASHING_OUTRO : 
+			broadcaster.restart(); 
+			break; 
+		}
+	
+		state = newstate; 
+		log("state = "+state);
+	
+	}
+	
+	function start() { 
+		log("started");
+		startTime = new Date().getTime();
+		flashOn = false; 
+		nextFlash = 0; 
+		currentImage = 0;
+		startGeolocating();
+		
+		changeState(STATE_HOLD_MSG);
+		// have to trigger sounds on a touch event
+		playClick() ;
+		playSilence() ;
+		
+	
+	}
+	
+	function stop() { 
+		changeState(STATE_CANCELLED);
+	}
+	
+	function back() { 
+		if(locationWatchId !=-1) {
+			
+			stopGeolocating(); 
+		}
+		//window.top.exitPixelPhones();
+		history.back();
+		
+	
+	}
+	function exitPixelPhones() { 
+		log("exitPixelPhones : this function overridden by parent window");
+	
+	}
+	
+	function show(domElement) { 
+		log("show", domElement);
+		domElement.style.display = "block"; 
+	}
+	function hide(domElement) { 
+		log("hide", domElement);
+		domElement.style.display = "none";
+	
+	}
+	
+	
+	function cancel() { 
+		changeState(STATE_CANCELLED);
+	
+	}
+	
+	
+	function onUnload() { 
+		
+		
+	}
+
+	function message(msg){
+		msgcount++; 
+		log(msg);
+	}
+
+
+
+
+	function updateColour() { 
+		changeColour("rgb("+currentColour.r+","+currentColour.g+","+currentColour.b+")");
+	}
+	
+	function changeColour(colour) { 
+	
+		c.fillStyle = colour; 
+		c.fillRect(0,0,4, 4); 
+		window.scrollTo(0,1); 
+	
+	
+	}
+	
+	/*function ColourFade(from, to, durationSecs) {
+		
+		this.from = from; 
+		this.to = to; 
+		this.durationMils = durationSecs*1000; 
+		this.startTime = new Date().getTime(); 
+		
+			
+		this.update = function() { 
+			var progress = (new Date().getTime() - this.startTime) / this.durationMils; 
+			//log(progress, this.startTime, this.durationMils); 
+			if(progress>=1) { 
+				changeColour(this.to.toString(16)); 	
+			} else {
+				changeColour(getInterpolatedColour(this.from, this.to, progress).toString(16)); 
+			
+				var that = this; 
+			
+				setTimeout(function(){that.update.apply(that);}, 10); 
+				
+			}
+		
+		};
+		this.update(); 
+	}
+	
+	function getInterpolatedColour(from, to, progress) { 
+		
+		var rfrom = from>>16; 
+		var rto = to>>16; 
+		
+		var gfrom = (from >> 8 ) & 0xff; 
+		var gto = (to >> 8 ) & 0xff; 
+
+		var bfrom = from  & 0xff; 
+		var bto = to & 0xff; 
+		
+		var r = ((rto-rfrom) * progress) + rfrom; 
+		var g = ((gto-gfrom) * progress) + gfrom; 
+		var b = ((bto-bfrom) * progress) + bfrom;
+		
+		return (r<<16) | (g<<8) | (b);  
+		
+	}*/
+	
+	function setTransform(transString) {
+		var s = canvas.style;
+		s.webkitTransform = s.msTransform = s.MozTransform = s.OTransform = s.transform = transString + (css3d ? " translateZ(0px)" : ""); 	
+		
+		
+	}
+	function supports3D() {
+		// borrowed from modernizr
+		var div = document.createElement('div'),
+			ret = false,
+			properties = ['perspectiveProperty', 'WebkitPerspective'];
+		for (var i = properties.length - 1; i >= 0; i--){
+			ret = ret ? ret : div.style[properties[i]] != undefined;
+		};
+	 
+	    // webkit has 3d transforms disabled for chrome, though
+        //   it works fine in safari on leopard and snow leopard
+        // as a result, it 'recognizes' the syntax and throws a false positive
+        // thus we must do a more thorough check:
+        if (ret){
+            var st = document.createElement('style');
+            // webkit allows this media query to succeed only if the feature is enabled.    
+            // "@media (transform-3d),(-o-transform-3d),(-moz-transform-3d),(-ms-transform-3d),(-webkit-transform-3d),(modernizr){#modernizr{height:3px}}"
+            st.textContent = '@media (-webkit-transform-3d){#test3d{height:3px}}';
+            document.getElementsByTagName('head')[0].appendChild(st);
+            div.id = 'test3d';
+            document.body.appendChild(div);
+
+            ret = div.offsetHeight === 3;
+
+            st.parentNode.removeChild(st);
+            div.parentNode.removeChild(div);
         }
+        return ret;
+	}
+	
+	
+	
 
-        function fail () {
-            console.log('location fuct')
-        }
+	function drawPosition(locationdata) { 
+		
+		if(!locationdata) return; 
+		
+  	  var lat = locationdata.coords.latitude; 
+	  var lon = locationdata.coords.longitude;
+	  var accuracy = locationdata.coords.accuracy; 
+  
+		// ctx.fillStyle = "red"; 
+		// 	ctx.fillRect(0,0,100,100); 
+		// 	ctx.drawImage(nycImage, 0,0); 
+	
+		for(var i = 0; i<mapData.length; i++) {
 
-        cordova.require('cordova/plugin/powermanagement').acquire(
-            function() { console.log( 'hooray power mgmt' ) },
-            function() { console.log( 'oh no! power mgmt fuct' ) }
-        )
+			var data = mapData[i]; 
 
-        navigator.geolocation.watchPosition(win, fail, {maximumAge: 3000, enableHighAccuracy:true})
-    }
+			var canvas = data.canvases[currentImage]; 
+			var context = data.contexts[currentImage]; 
 
-    document.addEventListener('deviceready', go, true)
-</script>
-</body>
+			var y = map(lat, data.latMin, data.latMax, 0, canvas.height);
+			var x = map(lon, data.longMin, data.longMax, 0, canvas.width);
+			//console.log(x, y, data.image); 
+			//console.log(lat, data.latMin, data.latMax); 
+
+			//console.log(long, data.longMin, data.longMax); 
+
+
+			if((x>=0) && (x<canvas.width) && (y>=0) && (y<canvas.height)) {
+
+
+			   //ctx.drawImage(data.image,0,0); 
+
+			// x = Math.round(x*10)/10; 
+			// 		y = Math.round(y*10)/10; 
+			// 
+				log("x:"+x+" y:"+y); 
+
+				x = Math.round(x); 
+				y = Math.round(y); 
+
+			  	var pixel = context.getImageData(x,y,1,1).data; 
+
+			  	var colour = 'rgb('+pixel[0]+','+pixel[1]+','+pixel[2]+')';
+			  	log("updating colour");
+			  	//console.log(currentColour); 
+			  	currentColour = {r: pixel[0], g:pixel[1], b:pixel[2] };
+
+			  	if(state==STATE_LOCATION_COLOUR) updateColour();
+  
+ 				hide(geoDiv); 
+
+			 } else { 
+				
+				
+				show(geoDiv); 
+				geoDiv.innerHTML = "<p>"+lat+"<br>"+lon+"</p>";
+			}
+		}  
+  
+	}
+	
+	function updatePosition(locationdata) { 
+  	  lastLocationData = locationdata; 
+	  log(locationdata.coords.latitude, locationdata.coords.longitude, locationdata.coords.accuracy); 
+  	console.log(locationdata.coords.latitude, locationdata.coords.longitude, locationdata.coords.accuracy); 
+	  drawPosition(lastLocationData); 
+  
+	}
+	function error(error) {
+		console.log('code: '    + error.code    + '\n' +
+              'message: ' + error.message + '\n');
+	}
+
+	function map(value, min1, max1, min2, max2, clampResult) { 
+		var returnvalue = ((value-min1) / (max1 - min1) * (max2-min2)) + min2; 
+		if(clampResult) return clamp(returnvalue, min2, max2); 
+		else return returnvalue; 
+	}
+
+	function clamp(value, min, max) { 
+		if(max<min) { 
+			var temp = min; 
+			min = max; 
+			max = temp; 
+		
+		}
+		return Math.max(min, Math.min(value, max)); 
+	}
+	
+	function log() { 
+		
+		if(debugMode) console.log(Array.prototype.slice.call(arguments));
+		
+		
+	}
+	
+	
+	function Broadcaster () { 
+		
+		var frameRate = 7,
+		
+		numBits = 16,	
+		currentColour,
+		broadcastNumber = 0, //Math.floor( Math.random() * Math.pow(2,10)),
+		code = [], 
+		startTime = (new Date()).getTime(), 
+		//currentFrame = 0, 
+
+		broadcasting = false, 
+		broadcastStartDelay = 0,
+		blackTimeOffset = 20, // number of extra mils to add to an 'off' signal than an on
+		doubleToSingleRatio = 2.5, // how much longer a double is than a single
+		currentBroadcastDigitIndex = 0,
+		doubleDigit = false,  // true if we're currently broadcasting a double digit
+		currentDigit = 0, // the bit that we're currently broadcasting
+		nextChangeTime = 0,
+		lastChangeTime,
+	
+		longestShortBlack = 0,
+		shortestLongBlack = Number.MAX_VALUE,
+		longestShortWhite = 0,
+		shortestLongWhite = Number.MAX_VALUE, 
+		touchesDisabled = false,
+
+		startTime, 
+	//	broadcastIDCount = 0, 
+		ID = 0, 
+		idChoices = [1, 443, 885, 3098, 4356, 15167, 16875, 18088, 18879, 18951, 19581, 20464, 21191, 22218, 22391, 22579, 22795, 24025, 24162, 24337, 26243, 28945, 29127, 31378, 31604, 31708, 31778, 32145, 32492, 32536, 33906, 34081, 37023, 38753, 39496, 41872, 42273, 42800, 43228, 43867, 44034, 44346, 47250, 47940, 50355, 51124, 57905, 59027, 61027, 61350, 64186];
+		
+		this.ID = ID = idChoices[Math.floor(Math.random()*idChoices.length)];  
+		
+		
+		var updateBroadcastColour = this.updateBroadcastColour = function() { 
+
+			if(broadcastStartDelay-->0) return; 
+			var now =  new Date().getTime();
+			var timeSinceLastChange =   now - lastChangeTime; 
+			//log(timeSinceLastChange + " " +nextChangeTime);
+			if(timeSinceLastChange>=nextChangeTime) {
+					log("-------------update");
+
+				/*
+				// check elapsed time to make sure it's not screwed up
+
+				if((currentDigit == "0") && doubleDigit) {
+					if(timeSinceLastChange < shortestLongBlack) {
+						shortestLongBlack = timeSinceLastChange; 
+						log("shortestLongBlack : ", shortestLongBlack);
+					}
+					if(timeSinceLastChange > longestShortBlack) {
+						log(710); 
+						reset(); 
+					}
+				} else if((currentDigit =="0") &&!doubleDigit) {
+
+					if(timeSinceLastChange > longestShortBlack) {
+						longestShortBlack = timeSinceLastChange; 
+						log("longestShortBlack : ", longestShortBlack);
+					}
+					if(timeSinceLastChange < shortestLongBlack) {
+						log(720); 
+						reset(); 
+					}	
+				} else if((currentDigit == "1") && doubleDigit) {
+					if(timeSinceLastChange < shortestLongWhite) {
+						shortestLongWhite = timeSinceLastChange; 
+						log("shortestLongWhite : ", shortestLongWhite);
+					}
+					if(timeSinceLastChange > longestShortWhite) {
+							log(729); 
+						reset(); 
+					}
+				}else if((currentDigit =="1") &&!doubleDigit) {
+
+					if(timeSinceLastChange > longestShortWhite) {
+						longestShortWhite = timeSinceLastChange; 
+					}
+					if(timeSinceLastChange < shortestLongWhite) {
+							log(738); 
+						reset(); 
+					}
+				} 
+				log("index before: "+ currentBroadcastDigitIndex); 
+				*/
+				
+				// get next digit and set the next changetime
+				currentBroadcastDigitIndex ++; 
+				log("index after : "+ currentBroadcastDigitIndex); 
+
+				// if we're at the end, tell the server and stop. 
+				if(currentBroadcastDigitIndex>code.length) {
+					// if you'd rather just restart, then use : currentBroadcastDigitIndex = 0; 
+					
+
+					// broadcastIDCount++; 
+					// 					if(broadcastIDCount>5) {
+					// 
+					// 
+					// 					}
+					
+					//currentBroadcastDigitIndex = 0; 
+					restart(); 
+					return; 
+
+				}
+
+				// get the next bit to broadcast, 0 or 1
+				var digit = currentDigit = code[currentBroadcastDigitIndex]; 
+
+				// and if there are two in a row, let's make it a double!
+				if((currentBroadcastDigitIndex<code.length-1) && ( digit == code[currentBroadcastDigitIndex+1])) {
+					currentBroadcastDigitIndex++; 
+					doubleDigit = true; 
+				} else {		
+					doubleDigit = false; 
+				}
+
+				var framelength = 1000 / frameRate;
+				//lastChangeTime += timeSinceLastChange -(timeSinceLastChange - nextChangeTime); 
+				lastChangeTime = now; 
+				nextChangeTime = framelength; 
+				if(doubleDigit) nextChangeTime*=doubleToSingleRatio; 
+				if(digit=="0") nextChangeTime += blackTimeOffset; 
+
+
+				if(digit == "1") { 
+					//setTransform( "scale("+SCREEN_WIDTH+","+SCREEN_HEIGHT+")");	
+					changeColour("white"); 	
+					log("current output : ", doubleDigit?"11":"1"); 
+					if(state==STATE_FLASHING_OUTRO) { 
+					 	
+						playClick(); 
+						
+					} else {
+						playSilence(); 
+					}
+				} else {
+					changeColour("black"); 
+					//setTransform("scale(0,0)");		
+					log("current output : ", doubleDigit?"00":"0"); 
+				}
+				
+				log("nextChangeTime : "+nextChangeTime); 
+
+			}
+
+
+		
+
+
+
+
+		};
+	
+		var restart = this.restart = function() { 
+			log ("restart");
+			setNumber(ID); 
+			
+			lastChangeTime = new Date().getTime();
+			nextChangeTime = 0; 
+			currentBroadcastDigitIndex = 0; 
+
+			//setTransform("scale(0,0)");	
+			//changeColour("ffffff");
+
+			//broadcasting = true;
+			broadcastStartDelay = 5; 
+
+			log("broadcasting id : "+ID); 
+			//log(broadcastNumber+"\n"+getBinaryCode(broadcastNumber)+"\n"+code);
+
+		};		
+		
+		// function reset() { 
+		// 			startTime = (new Date()).getTime(); 
+		// 			//currentFrame =0; 
+		// 			longestShortBlack = 0; 
+		// 			shortestLongBlack = Number.MAX_VALUE;
+		// 			longestShortWhite = 0; 
+		// 			shortestLongWhite = Number.MAX_VALUE;
+		// 			
+		// 		}
+		
+		
+		
+		function setNumber(num) {
+			broadcastNumber = Number(num); 
+			code = getManchesterCode(getBinaryCode(num, numBits));
+
+		}
+
+
+		function getBinaryCode(num, padding) {
+
+			//code = [true]; 
+			binaryString = num.toString(2); 
+
+
+			while(binaryString.length<padding) 
+				binaryString = "0"+binaryString; 
+
+			while(binaryString.length>padding) 
+				binaryString = binaryString.substring(1, binaryString.length); 
+
+			// alternate code for producing checksum instead of duplicating ID
+			var checksum = ""; 
+
+			for(var i = 0; i<binaryString.length; i+=2) { 
+				if(i+1<binaryString.length) { 
+					if(binaryString[i] == binaryString[i+1]) { 
+						checksum +="0"; 
+					} else { 
+						checksum +="1"; 
+					}	
+				} else { 
+					checksum +=binaryString[i]; 
+				}
+			}
+			log("binary : 1"+binaryString+checksum+"0"); 
+
+			return "1"+binaryString+checksum+"0"; 
+			
+
+		}
+
+		function getManchesterCode(binaryString) {
+			var manchesterCode = []; 
+
+
+			for(var j = 0; j<binaryString.length; j++) { 
+				if(binaryString.charAt(j)=="0")
+					manchesterCode.push(0, 1);
+				else
+					manchesterCode.push(1, 0);
+
+			}
+			manchesterCode.unshift(0,0,0,0,0,0,0,0,0,0); 
+		
+			log("manchester : ", manchesterCode); 
+			return manchesterCode; 
+
+
+		}
+		
+	}
+	
+	
+
+	</script>  
+
+
+
+	<canvas id="myCanvas" width="3" height="3"></canvas>
+
+	<div class="button" id="backButton"><a href='javascript:back()'>Back</a></div>
+	<div class="button" id="startButton" style="display:none"><a href='javascript:start()' >Start</a></div>
+	<div class="button" id="cancelButton" style="display:none"><a href='javascript:stop()'>Cancel</a></div>
+	<div class="info" id="infoDiv" ><p>Loading...</p></div>
+	<div class="geo" id="geoDiv" >geodiv</div>
+	
+	<img id="nycImageO" src="O.gif" style="display: none;"> 
+	<img id="nycImageEarth" src="Earth.gif" style="display: none;"> 
+
+
+
+
+
+<!-- <audio src="loop.mp3" id="looper" onended="this.play();" controls="controls" autobuffer></audio> -->
+	
+		
+		
+		
+  </body>
 </html>

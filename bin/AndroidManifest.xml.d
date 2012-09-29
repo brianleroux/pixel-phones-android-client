@@ -1,2 +1,2 @@
-/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/bin/AndroidManifest.xml : \
-/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/AndroidManifest.xml \
+/Users/seb/Dropbox/projects/pixel-phones-android-client/bin/AndroidManifest.xml : \
+/Users/seb/Dropbox/projects/pixel-phones-android-client/AndroidManifest.xml \
