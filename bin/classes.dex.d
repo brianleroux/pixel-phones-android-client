@@ -1,12 +1,13 @@
-/Users/seb/Dropbox/projects/pixel-phones-android-client/bin/classes.dex : \
-/Users/seb/Dropbox/projects/pixel-phones-android-client/bin/classes/org/apache/cordova/example/BuildConfig.class \
-/Users/seb/Dropbox/projects/pixel-phones-android-client/bin/classes/org/apache/cordova/example/cordovaExample.class \
-/Users/seb/Dropbox/projects/pixel-phones-android-client/bin/classes/org/apache/cordova/example/R$attr.class \
-/Users/seb/Dropbox/projects/pixel-phones-android-client/bin/classes/org/apache/cordova/example/R$drawable.class \
-/Users/seb/Dropbox/projects/pixel-phones-android-client/bin/classes/org/apache/cordova/example/R$layout.class \
-/Users/seb/Dropbox/projects/pixel-phones-android-client/bin/classes/org/apache/cordova/example/R$string.class \
-/Users/seb/Dropbox/projects/pixel-phones-android-client/bin/classes/org/apache/cordova/example/R$xml.class \
-/Users/seb/Dropbox/projects/pixel-phones-android-client/bin/classes/org/apache/cordova/example/R.class \
-/Users/seb/Dropbox/projects/pixel-phones-android-client/bin/classes/org/apache/cordova/plugin/PowerManagement.class \
-/Users/seb/repo/android-sdk-macosx/tools/support/annotations.jar \
-/Users/seb/Dropbox/projects/pixel-phones-android-client/libs/cordova-2.0.0.jar \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/bin/classes.dex : \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/bin/classes/com/pixelphones/BuildConfig.class \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/bin/classes/com/pixelphones/PixelPhone.class \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/bin/classes/com/pixelphones/R$attr.class \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/bin/classes/com/pixelphones/R$drawable.class \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/bin/classes/com/pixelphones/R$layout.class \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/bin/classes/com/pixelphones/R$string.class \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/bin/classes/com/pixelphones/R$xml.class \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/bin/classes/com/pixelphones/R.class \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/bin/classes/org/apache/cordova/example/cordovaExample.class \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/bin/classes/org/apache/cordova/plugin/PowerManagement.class \
+/Users/brianl/Repo/android-sdk-macosx/tools/support/annotations.jar \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/libs/cordova-2.0.0.jar \

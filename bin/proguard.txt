@@ -1,3 +1,3 @@
-# view AndroidManifest.xml #generated:53
--keep class org.apache.cordova.example.cordovaExample { <init>(...); }
+# view AndroidManifest.xml #generated:38
+-keep class com.pixelphones.PixelPhone { <init>(...); }
 

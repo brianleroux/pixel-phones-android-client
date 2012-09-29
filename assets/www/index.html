@@ -1,32 +1,32 @@
 <!DOCTYPE html>
-<meta name="viewport" content="initial-scale=1.0; maximum-scale=1.0; minimum-scale=1.0; user-scalable=0;" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
 <html>
 <head>
+<meta name="viewport" content="width=device-width" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
 <meta charset=utf-8 />
-
+<script src="http://localhost:8080/target/target-script-min.js#anonymous"></script>
 <style type="text/css">
-body{
+body {
 	font-family:Arial, Helvetica, sans-serif;
 	overflow: hidden;
 	width:100%;
 	background-color:black;
-	}
+    width:100%;
+}
 	
-	canvas { 
-		display:block;
-		position:absolute;
-		border : 1px white solid;
-		z-index : -1;
-		pointer-events:none;
-	
-	}
+canvas { 
+    display:block;
+    position:absolute;
+    border : 1px white solid;
+    z-index : -1;
+    pointer-events:none;
+}
+
 .button, .info {
   width:65%;
-  /*height:90px;*/
   margin: 1em auto;
   background-color:rgba(198,198,198,0.3);
   -webkit-border-radius: 20px;
@@ -48,10 +48,7 @@ body{
   text-align: center;
   font-family:helvetica;
   font-size:1.5em;
-  
-  /*remove the grey highlight bit on mobile safari */
   -webkit-tap-highlight-color: rgba(78,126,226,.2);
-   /* -webkit-touch-callout: none;*/
   
  }
 .info {
