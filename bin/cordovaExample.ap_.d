@@ -1,0 +1,27 @@
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/bin/cordovaExample.ap_ \
+ : /Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/res/drawable/icon.png \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/res/drawable-hdpi/ic_launcher.png \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/res/drawable-hdpi/icon.png \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/res/drawable-ldpi/ic_launcher.png \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/res/drawable-ldpi/icon.png \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/res/drawable-mdpi/ic_launcher.png \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/res/drawable-mdpi/icon.png \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/res/drawable-xhdpi/ic_launcher.png \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/res/drawable-xhdpi/icon.png \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/res/layout/main.xml \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/res/values/strings.xml \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/res/xml/config.xml \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/bin/res/drawable/icon.png \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/bin/res/drawable-hdpi/ic_launcher.png \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/bin/res/drawable-hdpi/icon.png \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/bin/res/drawable-ldpi/ic_launcher.png \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/bin/res/drawable-ldpi/icon.png \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/bin/res/drawable-mdpi/ic_launcher.png \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/bin/res/drawable-mdpi/icon.png \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/bin/res/drawable-xhdpi/ic_launcher.png \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/bin/res/drawable-xhdpi/icon.png \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/assets/www \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/assets/www/cordova-2.0.0.js \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/assets/www/index.html \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/assets/www/powermanagement.js \
+/Users/brianl/Desktop/phonegap-2.0.0/lib/android/example/bin/AndroidManifest.xml \
