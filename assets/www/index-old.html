@@ -1,0 +1,35 @@
+<html>
+<head>
+<meta name="viewport" content="width=320; user-scalable=no" />
+<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+<title>PhoneGap</title>
+</head>
+<body>
+<h1>Welcome to Cordova!</h1>
+<script src=cordova-2.0.0.js></script>
+<script src=powermanagement.js></script>
+<script>
+    function go() {
+        
+        console.log('init the geo')
+
+        function win (p) {
+            console.log('cur pos: ' + p.coords.latitude + " " + p.coords.longitude)
+        }
+
+        function fail () {
+            console.log('location fuct')
+        }
+
+        cordova.require('cordova/plugin/powermanagement').acquire(
+            function() { console.log( 'hooray power mgmt' ) },
+            function() { console.log( 'oh no! power mgmt fuct' ) }
+        )
+
+        navigator.geolocation.watchPosition(win, fail, {maximumAge: 3000, enableHighAccuracy:true})
+    }
+
+    document.addEventListener('deviceready', go, true)
+</script>
+</body>
+</html>
